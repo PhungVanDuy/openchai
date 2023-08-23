@@ -16,23 +16,6 @@ setup(
     description="OpenChai",
     packages=find_packages(),
     install_requires=install_requires,
-    extras_require={
-        "gptq": [
-            "alpaca_lora_4bit @ git+https://github.com/winglian/alpaca_lora_4bit.git@setup_pip",
-        ],
-        "gptq_triton": [
-            "alpaca_lora_4bit[triton] @ git+https://github.com/winglian/alpaca_lora_4bit.git@setup_pip",
-        ],
-        "flash-attn": [
-            "flash-attn==2.0.8",
-        ],
-        "extras": [
-            "deepspeed",
-        ],
-        "peft": [
-            "peft @ git+https://github.com/huggingface/peft.git",
-        ],
-    },
     entry_points={
         "console_scripts": [
             "openchai = openchai.openchai:cli",

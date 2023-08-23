@@ -1,12 +1,18 @@
 # OpenChai
 
 ### Installation:
+1. Install axolotl
 ```bash
+pip3 install -U git+https://github.com/huggingface/peft.git
 git clone https://github.com/OpenAccess-AI-Collective/axolotl
 cd axolotl
-
 pip3 install -e .[flash-attn]
-pip3 install -U git+https://github.com/huggingface/peft.git
+```
+2. Install OpenChai
+```bash
+git clone https://github.com/PhungVanDuy/openchai.git
+cd openchai
+pip3 install -e .
 ```
 
 ### Training:

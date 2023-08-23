@@ -6,6 +6,7 @@ import os
 import random
 import signal
 import sys
+import copy
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
@@ -28,11 +29,7 @@ from axolotl.utils.trainer import setup_trainer, calculate_total_num_steps
 from axolotl.utils.wandb import setup_wandb_env_vars
 
 from openchai.process_data.chatml_dataset import prepare_chatml_dataset
-from datasets import concatenate_datasets 
-
-# project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-# src_dir = os.path.join(project_root, "src")
-# sys.path.insert(0, src_dir)
+from datasets import concatenate_datasets
 
 configure_logging()
 LOG = logging.getLogger("axolotl.scripts")
@@ -40,26 +37,11 @@ LOG = logging.getLogger("axolotl.scripts")
 os.environ["HF_HUB_ENABLE_HF_TRANSFER"] = "1"
 
 
-def print_axolotl_text_art():
-    ascii_art = """
-                           dP            dP   dP
-                           88            88   88
-.d8888b. dP.  .dP .d8888b. 88 .d8888b. d8888P 88
-88'  `88  `8bd8'  88'  `88 88 88'  `88   88   88
-88.  .88  .d88b.  88.  .88 88 88.  .88   88   88
-`88888P8 dP'  `dP `88888P' dP `88888P'   dP   dP
-"""
-
-    if is_main_process():
-        print(ascii_art)
-
-
 def get_multi_line_input() -> Optional[str]:
     print("Give me an instruction (Ctrl + D to finish): ")
     instruction = ""
     for line in sys.stdin:
         instruction += line  # pylint: disable=consider-using-join
-    # instruction = pathlib.Path("/proc/self/fd/0").read_text()
     return instruction
 
 
@@ -195,23 +177,27 @@ def train(
     ):  # don't need to load dataset for these
         load_by_chatml = []
         load_by_others = []
-        import copy
+
         new_config = copy.deepcopy(cfg)
-        for item in cfg['datasets']:
-            if item['type'] == 'chatml':
+        for item in cfg["datasets"]:
+            if item["type"] == "chatml":
                 load_by_chatml.append(item)
             else:
                 load_by_others.append(item)
-        new_config['datasets'] = load_by_chatml
-        cfg['datasets'] = load_by_others
+        new_config["datasets"] = load_by_chatml
+        cfg["datasets"] = load_by_others
         if load_by_chatml:
             train_chatml, eval_chatml = prepare_chatml_dataset(new_config, tokenizer)
-            total_num_steps_chatml =  calculate_total_num_steps(new_config, train_chatml, tokenizer)
+            total_num_steps_chatml = calculate_total_num_steps(
+                new_config, train_chatml, tokenizer
+            )
         if load_by_others:
-            train_dataset, eval_dataset, total_num_steps = prepare_dataset(cfg, tokenizer)
+            train_dataset, eval_dataset, total_num_steps = prepare_dataset(
+                cfg, tokenizer
+            )
         if load_by_chatml and load_by_others:
-            train_dataset = ConcatDataset([train_dataset, train_chatml])
-            eval_dataset = ConcatDataset([eval_dataset, eval_chatml])
+            train_dataset = concatenate_datasets([train_dataset, train_chatml])
+            eval_dataset = concatenate_datasets([eval_dataset, eval_chatml])
             total_num_steps = total_num_steps + total_num_steps_chatml
         if not load_by_others:
             train_dataset = train_chatml

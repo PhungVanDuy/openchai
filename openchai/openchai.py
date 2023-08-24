@@ -6,7 +6,7 @@ from pathlib import Path
 
 def cli():
     parser = argparse.ArgumentParser(description="OpenChai -  CLI")
-    subparsers = parser.add_subparsers(dest="command", required=True, help="Chai commands")
+    subparsers = parser.add_subparsers(dest="command", required=True, help="OpenChai CLI")
 
     train_parser = subparsers.add_parser("train", help="Training ArgumentParser")
     train_parser.add_argument("--config_path", type=str, required=True, help="Path to the input directory")

@@ -6,6 +6,8 @@ tokenizer_type: LlamaTokenizer
 datasets:
   - path: AlekseyKorshuk/chai-davinci-chatml
     type: chatml
+  - path: ChaiML/soda_10k_samples
+    type: input_output
 dataset_prepared_path: last_run_prepared
 val_set_size: 0.01
 output_dir: ./llama2-out

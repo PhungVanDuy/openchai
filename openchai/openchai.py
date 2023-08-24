@@ -4,7 +4,6 @@ import subprocess
 import argparse
 from pathlib import Path
 
-
 def cli():
     parser = argparse.ArgumentParser(description="OpenChai -  CLI")
     subparsers = parser.add_subparsers(dest="command", required=True, help="Chai commands")

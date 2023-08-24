@@ -1,3 +1,4 @@
+import copy
 from datasets import load_dataset
 
 def get_raw_dataset(dataset_name, val_set_size=0.01, max_samples=-1):
@@ -26,3 +27,34 @@ def get_raw_dataset(dataset_name, val_set_size=0.01, max_samples=-1):
             split=f"train[:{max_samples}]",
         )
     return raw_datasets
+
+
+def tokenize_function(examples, tokenizer, max_length):
+    input_texts = examples['model_input']
+    output_texts = examples['model_output']
+    data = [input_ + output_ for input_, output_ in zip(input_texts, output_texts)]
+    
+    inputs = tokenizer(
+        data,
+        padding="max_length",
+        max_length=max_length,
+        truncation=True,
+        return_token_type_ids=False
+    )
+
+    inputs["labels"] = copy.deepcopy(inputs.input_ids)
+    batch_size = len(inputs["labels"])
+
+#    inputs = disable_input_text_tokens(tokenizer, output_texts, inputs, batch_size)
+
+    return inputs
+
+def disable_input_text_tokens(tokenizer, output_texts, inputs, batch_size):
+    """We only want to train on the output_text tokens so set others to -100. """
+    output_lengths = [len(tokenizer(output_string).input_ids) for output_string in output_texts]
+
+    for batch in range(batch_size):
+        num_input_tokens = len(inputs['labels'][batch]) - output_lengths[batch]
+        for token in range(0, num_input_tokens):
+            inputs["labels"][batch][token] = -100
+    return inputs

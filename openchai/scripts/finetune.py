@@ -28,7 +28,7 @@ from axolotl.utils.tokenization import check_dataset_labels
 from axolotl.utils.trainer import setup_trainer, calculate_total_num_steps
 from axolotl.utils.wandb import setup_wandb_env_vars
 
-from openchai.process_data.chatml_dataset import prepare_chatml_dataset
+from openchai.process_data.dialogue_dataset import prepare_chatml_dataset
 from datasets import concatenate_datasets
 
 configure_logging()
@@ -175,34 +175,34 @@ def train(
     if (
         check_not_in(["shard", "merge_lora"], kwargs) and not cfg.inference
     ):  # don't need to load dataset for these
-        load_by_chatml = []
-        load_by_others = []
+        load_by_openchai = []
+        load_by_axo = []
 
         new_config = copy.deepcopy(cfg)
         for item in cfg["datasets"]:
-            if item["type"] == "chatml":
-                load_by_chatml.append(item)
+            if item["type"] == "chatml" or item["type"] == "input_output":
+                load_by_openchai.append(item)
             else:
-                load_by_others.append(item)
-        new_config["datasets"] = load_by_chatml
-        cfg["datasets"] = load_by_others
-        if load_by_chatml:
-            train_chatml, eval_chatml = prepare_chatml_dataset(new_config, tokenizer)
-            total_num_steps_chatml = calculate_total_num_steps(
-                new_config, train_chatml, tokenizer
+                load_by_axo.append(item)
+        new_config["datasets"] = load_by_openchai
+        cfg["datasets"] = load_by_axo
+        if load_by_openchai:
+            train_openchai, eval_openchai = prepare_chatml_dataset(new_config, tokenizer)
+            total_num_steps_openchai = calculate_total_num_steps(
+                new_config, train_openchai, tokenizer
             )
-        if load_by_others:
+        if load_by_axo:
             train_dataset, eval_dataset, total_num_steps = prepare_dataset(
                 cfg, tokenizer
             )
-        if load_by_chatml and load_by_others:
-            train_dataset = concatenate_datasets([train_dataset, train_chatml])
-            eval_dataset = concatenate_datasets([eval_dataset, eval_chatml])
-            total_num_steps = total_num_steps + total_num_steps_chatml
-        if not load_by_others:
-            train_dataset = train_chatml
-            eval_dataset = eval_chatml
-            total_num_steps = total_num_steps_chatml
+        if load_by_openchai and load_by_axo:
+            train_dataset = concatenate_datasets([train_dataset, train_openchai])
+            eval_dataset = concatenate_datasets([eval_dataset, eval_openchai])
+            total_num_steps = total_num_steps + total_num_steps_openchai
+        if not load_by_axo:
+            train_dataset = train_openchai
+            eval_dataset = eval_openchai
+            total_num_steps = total_num_steps_openchai
 
     if cfg.debug or "debug" in kwargs:
         LOG.info("check_dataset_labels...")
